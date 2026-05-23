@@ -64,15 +64,15 @@ function App() {
   if (!usuario) {
     return (
       <div className="login-container">
-        <h1 className="login-title">Predictor Mundial</h1>
-        <p className="login-subtitle">Ingresa tu nombre para comenzar</p>
+        <h1 className="login-title">El Fixture de tu amigo Jota</h1>
+        <p className="login-subtitle">Quién sos vos?</p>
         
         <div className="login-form">
           <input
             type="text"
             value={nombreInput}
             onChange={(e) => setNombreInput(e.target.value)}
-            placeholder="Tu nombre"
+            placeholder="Acá pone tu nombre amic"
             className="login-input"
           />
           <button 
