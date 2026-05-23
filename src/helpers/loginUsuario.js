@@ -1,37 +1,45 @@
 import { doc, getDoc, setDoc } from "firebase/firestore"
-
 import { db } from "../firebase/firebase"
 
 async function loginUsuario(nombre) {
 
-    const nombreNormalizado = nombre
-        .trim()
-        .toLowerCase()
+  const nombreNormalizado = nombre
+    .trim()
+    .toLowerCase()
 
-    const usuarioRef = doc(
-        db,
-        "usuarios",
-        nombreNormalizado
-    )
+  const usuarioRef = doc(db, "usuarios", nombreNormalizado)
+  const usuarioSnap = await getDoc(usuarioRef)
 
-    const usuarioSnap = await getDoc(usuarioRef)
-
-    if (!usuarioSnap.exists()) {
-
-        await setDoc(usuarioRef, {
-            nombre: nombreNormalizado,
-            predicciones: [],
-        })
-
-        return {
-            nombre: nombreNormalizado,
-            predicciones: [],
-        }
-
+  if (!usuarioSnap.exists()) {
+    const nuevoUsuario = {
+      nombre: nombreNormalizado,
+      predicciones: [],
+      bracket: {
+        ganadores16avos: [],
+        ganadoresOctavos: [],
+        ganadoresCuartos: [],
+        ganadoresSemis: [],
+        ganadorFinal: [],
+      },
     }
+    await setDoc(usuarioRef, nuevoUsuario)
+    return nuevoUsuario
+  }
 
-    return usuarioSnap.data()
+  const data = usuarioSnap.data()
 
+  // compatibilidad con usuarios viejos que no tienen bracket guardado
+  if (!data.bracket) {
+    data.bracket = {
+      ganadores16avos: [],
+      ganadoresOctavos: [],
+      ganadoresCuartos: [],
+      ganadoresSemis: [],
+      ganadorFinal: [],
+    }
+  }
+
+  return data
 }
 
 export default loginUsuario

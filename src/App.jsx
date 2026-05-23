@@ -13,6 +13,7 @@ import actualizarPrediccion from "./helpers/actualizarPredicciones"
 import generarPartidos16avos from "./helpers/generarPartidos16avos"
 import generarSiguienteFase from "./helpers/generarSiguienteFase"
 import Bracket from "./components/Bracket"
+import guardarBracket from "./helpers/guardarBracket"
 import "./App.css"
 
 function App() {
@@ -26,17 +27,24 @@ function App() {
   const [ganadoresSemis, setGanadoresSemis] = useState([])
   const [ganadorFinal, setGanadorFinal] = useState([])
 
-  const handleLogin = async () => {
-    if (!nombreInput.trim()) return
-    try {
-      const dataUsuario = await loginUsuario(nombreInput)
-      setUsuario(dataUsuario.nombre)
-      setPredicciones(dataUsuario.predicciones)
-    }
-    catch (error) {
-      console.log(error)
-    }
+const handleLogin = async () => {
+  if (!nombreInput.trim()) return
+  try {
+    const dataUsuario = await loginUsuario(nombreInput)
+    setUsuario(dataUsuario.nombre)
+    setPredicciones(dataUsuario.predicciones)
+
+    // ← nuevo: cargar bracket persistido
+    const b = dataUsuario.bracket ?? {}
+    setGanadores16avos(b.ganadores16avos ?? [])
+    setGanadoresOctavos(b.ganadoresOctavos ?? [])
+    setGanadoresCuartos(b.ganadoresCuartos ?? [])
+    setGanadoresSemis(b.ganadoresSemis ?? [])
+    setGanadorFinal(b.ganadorFinal ?? [])
+  } catch (error) {
+    console.log(error)
   }
+}
 
   useEffect(() => {
     if (!usuario) return
@@ -45,6 +53,17 @@ function App() {
       predicciones
     )
   }, [predicciones])
+
+useEffect(() => {
+  if (!usuario) return
+  guardarBracket(usuario, {
+    ganadores16avos,
+    ganadoresOctavos,
+    ganadoresCuartos,
+    ganadoresSemis,
+    ganadorFinal,
+  })
+}, [ganadores16avos, ganadoresOctavos, ganadoresCuartos, ganadoresSemis, ganadorFinal])
 
   const grupos = [
     "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L"
