@@ -396,10 +396,10 @@ body {
   flex-direction: row;
   align-items: stretch;
   width: 100%;
-  height: calc(8 * 56px + 7 * 4px + 24px);
+  height: calc(8 * 44px * 2 + 8 * 16px + 7 * 20px + 24px);
   gap: 2px;
   padding: 0 2px;
-  position: relative; /* necesario para el SVG overlay */
+  position: relative;
 }
 
 /* ─── Columna ──────────────────────────────────── */
@@ -453,39 +453,43 @@ body {
   justify-content: center;
 }
 
+/* El padding vertical crea el espacio entre partidos.
+   Las líneas SVG se conectan exactamente en el centro de ese espacio */
 .bk-slot-inner {
-  padding: 2px 0;
+  padding: 10px 0;
 }
 
 /* ─── Card ─────────────────────────────────────── */
 
 .bk-card {
-  background: var(--bg-card);
+  background: transparent;
   border: 1px solid var(--border-subtle);
   border-radius: 4px;
   overflow: hidden;
   width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 0;
 }
 
 .bk-card--empty {
   background: transparent;
   border-color: transparent;
-  height: 52px;
+  height: 88px;
 }
 
 .bk-card--mirrored .bk-team {
   flex-direction: row-reverse;
-  text-align: right;
 }
 
 /* ─── Team row ─────────────────────────────────── */
 
 .bk-team {
+  background: var(--bg-card);
   display: flex;
   align-items: center;
   justify-content: center;
-  padding: 0;
-  height: 20px;
+  height: 44px;   /* mínimo táctil Apple HIG / Material Design */
   cursor: pointer;
   border-bottom: 1px solid var(--border-subtle);
   transition: background 0.12s;
@@ -498,7 +502,7 @@ body {
 }
 
 .bk-team:hover {
-  background: rgba(255,255,255,0.05);
+  background: var(--bg-card-hover);
 }
 
 .bk-team--activo {
@@ -514,16 +518,36 @@ body {
 }
 
 .bk-team--vacio:hover {
-  background: transparent;
+  background: var(--bg-card);
+}
+
+/* ─── Team inner ───────────────────────────────── */
+
+/* Bandera y siglas en fila horizontal, igual que canchallena */
+.bk-team-inner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
 }
 
 .bk-bandera {
-  width: 18px;
-  height: 13px;
+  width: 22px;
+  height: 15px;
   object-fit: cover;
-  border-radius: 1px;
+  border-radius: 2px;
   flex-shrink: 0;
   display: block;
+}
+
+.bk-siglas {
+  font-family: 'Barlow', sans-serif;
+  font-size: 0.68rem;
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--text-primary);
+  text-transform: uppercase;
+  line-height: 1;
 }
 
 .bk-placeholder {

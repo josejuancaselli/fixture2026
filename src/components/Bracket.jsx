@@ -26,6 +26,7 @@ function MatchCard({ partido, ganadores, setGanadores, mirrored, readOnly }) {
   return (
     <div className={`bk-card${mirrored ? " bk-card--mirrored" : ""}`}>
       {equipos.map(({ equipo, key }) => {
+        {console.log(equipos)}
         const activo = !!equipo && ganActual?.ganadorId === equipo.id
         return (
           <div
@@ -35,9 +36,15 @@ function MatchCard({ partido, ganadores, setGanadores, mirrored, readOnly }) {
             style={readOnly ? { cursor: "default" } : {}}
           >
             {equipo
-              ? <img src={equipo.bandera} className="bk-bandera" alt={equipo.nombre} />
-              : <span className="bk-placeholder">?</span>
-            }
+  ? (
+    <div className="bk-team-inner">
+      <img src={equipo.bandera} className="bk-bandera" alt={equipo.nombre} />
+      {console.log(equipo.sigla)}
+      <span className="bk-siglas">{equipo.sigla}</span>
+    </div>
+  )
+  : <span className="bk-placeholder">?</span>
+}
           </div>
         )
       })}
