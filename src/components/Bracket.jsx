@@ -43,7 +43,7 @@ function MatchCard({ partido, ganadores, setGanadores, mirrored, readOnly }) {
       <span className="bk-siglas">{equipo.sigla}</span>
     </div>
   )
-  : <span className="bk-placeholder">?</span>
+  : <span className="bk-placeholder">-</span>
 }
           </div>
         )
