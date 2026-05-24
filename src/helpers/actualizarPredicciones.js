@@ -12,29 +12,21 @@ function actualizarPrediccion(
 
 
     if (existePrediccion) {
-
-        return prev.map((pred) => {
-
-            if (pred.partidoId === partidoId) {
-
-                return {
-
-                    ...pred,
-
-                    [campo]:
-                        valor === ""
-                            ? null
-                            : Number(valor)
-
-                }
-
+    const actualizado = prev.map((pred) => {
+        if (pred.partidoId === partidoId) {
+            return {
+                ...pred,
+                [campo]: valor === "" ? null : Number(valor)
             }
+        }
+        return pred
+    })
 
-            return pred
-
-        })
-
-    }
+    // Si ambos goles quedaron null, eliminamos el objeto del array
+    return actualizado.filter(
+        pred => !(pred.partidoId === partidoId && pred.golesLocal === null && pred.golesVisitante === null)
+    )
+}
 
 
 

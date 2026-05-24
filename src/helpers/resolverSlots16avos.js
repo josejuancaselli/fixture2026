@@ -8,7 +8,7 @@ function resolverSlots16avos(
 
     const resultado = {}
 
-    const tercerosAsignados = asignarTerceros(slots16avos, mejoresTerceros)
+    const tercerosAsignados = asignarTerceros(slots16avos, mejoresTerceros) ?? {}
 
     Object.entries(slots16avos).forEach(([slot, valor]) => {
 

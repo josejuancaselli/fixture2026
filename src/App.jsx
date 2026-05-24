@@ -8,7 +8,6 @@ import Grupo from "./components/Grupo"
 import obtenerClasificados from "./helpers/obtenerClasificados"
 import resolverSlots16avos from "./helpers/resolverSlots16avos"
 import slots16avos from "./data/slots16avos"
-import gruposCompletos from "./helpers/gruposCompletos"
 import generarPartidos16avos from "./helpers/generarPartidos16avos"
 import generarSiguienteFase from "./helpers/generarSiguienteFase"
 import Bracket from "./components/Bracket"
@@ -21,7 +20,7 @@ function App() {
 
   const [usuario, setUsuario] = useState(null)
   const [tab, setTab] = useState("mis")
-  const [usuarios, setUsuarios] = useState([])         // ← estaba faltando
+  const [usuarios, setUsuarios] = useState([])
   const [usuarioVisto, setUsuarioVisto] = useState(null)
   const [predicciones, setPredicciones] = useState([])
   const [nombreInput, setNombreInput] = useState("")
@@ -71,10 +70,50 @@ function App() {
   const grupos = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L"]
 
   const { clasificados, mejoresTerceros } = obtenerClasificados(
-    grupos, equipos, partidos, predicciones, calcularTabla
+    grupos,
+    equipos,
+    partidos,
+    predicciones,
+    calcularTabla
   )
 
-  const torneoCompleto = gruposCompletos(partidos, predicciones)
+  // ── Filtro: solo clasificados de grupos con todos los partidos cargados ──
+  //
+  // Un grupo está "completo" cuando todos sus partidos tienen golesLocal
+  // y golesVisitante cargados en las predicciones. Si le falta aunque sea
+  // un partido, ese grupo no aporta clasificados al bracket todavía.
+  //
+const grupoCompleto = (grupoLetra) => {
+    const partidosDelGrupo = partidos.filter(p => p.grupo === grupoLetra)
+    return partidosDelGrupo.every(p => {
+        const pred = predicciones.find(pred => pred.partidoId === p.id)
+        return (
+            pred !== undefined &&
+            pred.golesLocal !== undefined &&
+            pred.golesLocal !== null &&
+            pred.golesLocal !== "" &&
+            pred.golesVisitante !== undefined &&
+            pred.golesVisitante !== null &&
+            pred.golesVisitante !== ""
+        )
+    })
+}
+
+  // clasificados es { A1: equipo, A2: equipo, B1: equipo, ... }
+  // Filtramos cada clave: si la letra del grupo no está completa, ponemos undefined
+  // así resolverSlots16avos recibe undefined en ese slot y el bracket muestra "?"
+  const clasificadosFiltrados = Object.fromEntries(
+    Object.entries(clasificados).map(([clave, equipo]) => {
+      // clave es algo como "A1", "B2" — la letra del grupo es clave[0]
+      const grupoLetra = clave[0]
+      return [clave, grupoCompleto(grupoLetra) ? equipo : undefined]
+    })
+  )
+
+  // mejoresTerceros es un array — filtramos los que sean de grupos completos
+  const mejoresTercerosFiltrados = mejoresTerceros.filter(
+    e => grupoCompleto(e.grupo)
+  )
 
   // Login Screen
   if (!usuario) {
@@ -99,7 +138,17 @@ function App() {
   }
 
   // Main App
-  const slotsResueltos = resolverSlots16avos(slots16avos, clasificados, mejoresTerceros)
+  //
+  // Usamos clasificadosFiltrados y mejoresTercerosFiltrados en lugar de
+  // clasificados y mejoresTerceros — así los slots del bracket solo se
+  // completan cuando el grupo correspondiente tiene todos sus partidos cargados
+  //
+  const slotsResueltos = resolverSlots16avos(
+    slots16avos,
+    clasificadosFiltrados,
+    mejoresTercerosFiltrados
+  )
+
   const partidos16avos  = generarPartidos16avos(slotsResueltos)
   const partidosOctavos = generarSiguienteFase(partidos16avos, ganadores16avos, "8")
   const partidosCuartos = generarSiguienteFase(partidosOctavos, ganadoresOctavos, "4")
@@ -146,28 +195,26 @@ function App() {
             </div>
           </section>
 
-          {torneoCompleto && (
-            <section className="knockout-section">
-              <h2 className="knockout-main-title">Fase de Eliminación</h2>
-              <Bracket
-                partidos16avos={partidos16avos}
-                partidosOctavos={partidosOctavos}
-                partidosCuartos={partidosCuartos}
-                partidosSemis={partidosSemis}
-                partidosFinal={partidosFinal}
-                ganadores16avos={ganadores16avos}
-                ganadoresOctavos={ganadoresOctavos}
-                ganadoresCuartos={ganadoresCuartos}
-                ganadoresSemis={ganadoresSemis}
-                ganadorFinal={ganadorFinal}
-                setGanadores16avos={setGanadores16avos}
-                setGanadoresOctavos={setGanadoresOctavos}
-                setGanadoresCuartos={setGanadoresCuartos}
-                setGanadoresSemis={setGanadoresSemis}
-                setGanadorFinal={setGanadorFinal}
-              />
-            </section>
-          )}
+          <section className="knockout-section">
+            <h2 className="knockout-main-title">Fase de Eliminación</h2>
+            <Bracket
+              partidos16avos={partidos16avos}
+              partidosOctavos={partidosOctavos}
+              partidosCuartos={partidosCuartos}
+              partidosSemis={partidosSemis}
+              partidosFinal={partidosFinal}
+              ganadores16avos={ganadores16avos}
+              ganadoresOctavos={ganadoresOctavos}
+              ganadoresCuartos={ganadoresCuartos}
+              ganadoresSemis={ganadoresSemis}
+              ganadorFinal={ganadorFinal}
+              setGanadores16avos={setGanadores16avos}
+              setGanadoresOctavos={setGanadoresOctavos}
+              setGanadoresCuartos={setGanadoresCuartos}
+              setGanadoresSemis={setGanadoresSemis}
+              setGanadorFinal={setGanadorFinal}
+            />
+          </section>
         </>
       )}
 
