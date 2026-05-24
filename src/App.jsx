@@ -9,16 +9,20 @@ import obtenerClasificados from "./helpers/obtenerClasificados"
 import resolverSlots16avos from "./helpers/resolverSlots16avos"
 import slots16avos from "./data/slots16avos"
 import gruposCompletos from "./helpers/gruposCompletos"
-import actualizarPrediccion from "./helpers/actualizarPredicciones"
 import generarPartidos16avos from "./helpers/generarPartidos16avos"
 import generarSiguienteFase from "./helpers/generarSiguienteFase"
 import Bracket from "./components/Bracket"
 import guardarBracket from "./helpers/guardarBracket"
+import obtenerTodosLosUsuarios from "./helpers/obtenerTodosLosUsuarios"
+import VistaUsuario from "./components/VistaUsuario"
 import "./App.css"
 
 function App() {
 
   const [usuario, setUsuario] = useState(null)
+  const [tab, setTab] = useState("mis")
+  const [usuarios, setUsuarios] = useState([])         // ← estaba faltando
+  const [usuarioVisto, setUsuarioVisto] = useState(null)
   const [predicciones, setPredicciones] = useState([])
   const [nombreInput, setNombreInput] = useState("")
   const [ganadores16avos, setGanadores16avos] = useState([])
@@ -27,54 +31,47 @@ function App() {
   const [ganadoresSemis, setGanadoresSemis] = useState([])
   const [ganadorFinal, setGanadorFinal] = useState([])
 
-const handleLogin = async () => {
-  if (!nombreInput.trim()) return
-  try {
-    const dataUsuario = await loginUsuario(nombreInput)
-    setUsuario(dataUsuario.nombre)
-    setPredicciones(dataUsuario.predicciones)
+  const handleLogin = async () => {
+    if (!nombreInput.trim()) return
+    try {
+      const dataUsuario = await loginUsuario(nombreInput)
+      setUsuario(dataUsuario.nombre)
+      setPredicciones(dataUsuario.predicciones)
 
-    // ← nuevo: cargar bracket persistido
-    const b = dataUsuario.bracket ?? {}
-    setGanadores16avos(b.ganadores16avos ?? [])
-    setGanadoresOctavos(b.ganadoresOctavos ?? [])
-    setGanadoresCuartos(b.ganadoresCuartos ?? [])
-    setGanadoresSemis(b.ganadoresSemis ?? [])
-    setGanadorFinal(b.ganadorFinal ?? [])
-  } catch (error) {
-    console.log(error)
+      const b = dataUsuario.bracket ?? {}
+      setGanadores16avos(b.ganadores16avos ?? [])
+      setGanadoresOctavos(b.ganadoresOctavos ?? [])
+      setGanadoresCuartos(b.ganadoresCuartos ?? [])
+      setGanadoresSemis(b.ganadoresSemis ?? [])
+      setGanadorFinal(b.ganadorFinal ?? [])
+
+      const todosLosUsuarios = await obtenerTodosLosUsuarios()
+      setUsuarios(todosLosUsuarios)
+    } catch (error) {
+      console.log(error)
+    }
   }
-}
 
   useEffect(() => {
     if (!usuario) return
-    guardarPredicciones(
-      usuario,
-      predicciones
-    )
+    guardarPredicciones(usuario, predicciones)
   }, [predicciones])
 
-useEffect(() => {
-  if (!usuario) return
-  guardarBracket(usuario, {
-    ganadores16avos,
-    ganadoresOctavos,
-    ganadoresCuartos,
-    ganadoresSemis,
-    ganadorFinal,
-  })
-}, [ganadores16avos, ganadoresOctavos, ganadoresCuartos, ganadoresSemis, ganadorFinal])
+  useEffect(() => {
+    if (!usuario) return
+    guardarBracket(usuario, {
+      ganadores16avos,
+      ganadoresOctavos,
+      ganadoresCuartos,
+      ganadoresSemis,
+      ganadorFinal,
+    })
+  }, [ganadores16avos, ganadoresOctavos, ganadoresCuartos, ganadoresSemis, ganadorFinal])
 
-  const grupos = [
-    "A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L"
-  ]
+  const grupos = ["A", "B", "C", "D", "E", "F", "G", "H", "I", "J", "K", "L"]
 
   const { clasificados, mejoresTerceros } = obtenerClasificados(
-    grupos,
-    equipos,
-    partidos,
-    predicciones,
-    calcularTabla
+    grupos, equipos, partidos, predicciones, calcularTabla
   )
 
   const torneoCompleto = gruposCompletos(partidos, predicciones)
@@ -85,7 +82,6 @@ useEffect(() => {
       <div className="login-container">
         <h1 className="login-title">El Fixture de tu amigo Jota</h1>
         <p className="login-subtitle">Quién sos vos?</p>
-        
         <div className="login-form">
           <input
             type="text"
@@ -94,10 +90,7 @@ useEffect(() => {
             placeholder="Acá pone tu nombre amic"
             className="login-input"
           />
-          <button 
-            onClick={handleLogin} 
-            className="login-button"
-          >
+          <button onClick={handleLogin} className="login-button">
             Entrar
           </button>
         </div>
@@ -106,64 +99,111 @@ useEffect(() => {
   }
 
   // Main App
-  const slotsResueltos = resolverSlots16avos(
-    slots16avos,
-    clasificados,
-    mejoresTerceros
-  )
-
-  const partidos16avos = generarPartidos16avos(slotsResueltos)
+  const slotsResueltos = resolverSlots16avos(slots16avos, clasificados, mejoresTerceros)
+  const partidos16avos  = generarPartidos16avos(slotsResueltos)
   const partidosOctavos = generarSiguienteFase(partidos16avos, ganadores16avos, "8")
   const partidosCuartos = generarSiguienteFase(partidosOctavos, ganadoresOctavos, "4")
-  const partidosSemis = generarSiguienteFase(partidosCuartos, ganadoresCuartos, "2")
-  const partidosFinal = generarSiguienteFase(partidosSemis, ganadoresSemis, "1")
+  const partidosSemis   = generarSiguienteFase(partidosCuartos, ganadoresCuartos, "2")
+  const partidosFinal   = generarSiguienteFase(partidosSemis, ganadoresSemis, "1")
 
   return (
     <div className="app-container">
+
       <header className="app-header">
         <h1 className="welcome-title">Bienvenido, {usuario}</h1>
+        <div className="tabs">
+          <button
+            className={`tab-btn${tab === "mis" ? " tab-btn--active" : ""}`}
+            onClick={() => { setTab("mis"); setUsuarioVisto(null) }}
+          >
+            Mis predicciones
+          </button>
+          <button
+            className={`tab-btn${tab === "otros" ? " tab-btn--active" : ""}`}
+            onClick={() => setTab("otros")}
+          >
+            Ver otros
+          </button>
+        </div>
       </header>
 
-      <section className="groups-section">
-        <div className="groups-grid">
-          {grupos.map((grupo) => (
-            <Grupo
-              key={grupo}
-              grupo={grupo}
-              equipos={equipos}
-              partidos={partidos}
-              predicciones={predicciones}
-              setPredicciones={setPredicciones}
-              calcularTabla={calcularTabla}
-            />
-          ))}
-        </div>
-      </section>
+      {/* ── Mis predicciones ── */}
+      {tab === "mis" && (
+        <>
+          <section className="groups-section">
+            <div className="groups-grid">
+              {grupos.map((grupo) => (
+                <Grupo
+                  key={grupo}
+                  grupo={grupo}
+                  equipos={equipos}
+                  partidos={partidos}
+                  predicciones={predicciones}
+                  setPredicciones={setPredicciones}
+                  calcularTabla={calcularTabla}
+                />
+              ))}
+            </div>
+          </section>
 
-      {torneoCompleto && (
-  <section className="knockout-section">
-    <h2 className="knockout-main-title">Fase de Eliminación</h2>
-    <Bracket
-      partidos16avos={partidos16avos}
-      partidosOctavos={partidosOctavos}
-      partidosCuartos={partidosCuartos}
-      partidosSemis={partidosSemis}
-      partidosFinal={partidosFinal}
- 
-      ganadores16avos={ganadores16avos}
-      ganadoresOctavos={ganadoresOctavos}
-      ganadoresCuartos={ganadoresCuartos}
-      ganadoresSemis={ganadoresSemis}
-      ganadorFinal={ganadorFinal}
- 
-      setGanadores16avos={setGanadores16avos}
-      setGanadoresOctavos={setGanadoresOctavos}
-      setGanadoresCuartos={setGanadoresCuartos}
-      setGanadoresSemis={setGanadoresSemis}
-      setGanadorFinal={setGanadorFinal}
-    />
-  </section>
-)}
+          {torneoCompleto && (
+            <section className="knockout-section">
+              <h2 className="knockout-main-title">Fase de Eliminación</h2>
+              <Bracket
+                partidos16avos={partidos16avos}
+                partidosOctavos={partidosOctavos}
+                partidosCuartos={partidosCuartos}
+                partidosSemis={partidosSemis}
+                partidosFinal={partidosFinal}
+                ganadores16avos={ganadores16avos}
+                ganadoresOctavos={ganadoresOctavos}
+                ganadoresCuartos={ganadoresCuartos}
+                ganadoresSemis={ganadoresSemis}
+                ganadorFinal={ganadorFinal}
+                setGanadores16avos={setGanadores16avos}
+                setGanadoresOctavos={setGanadoresOctavos}
+                setGanadoresCuartos={setGanadoresCuartos}
+                setGanadoresSemis={setGanadoresSemis}
+                setGanadorFinal={setGanadorFinal}
+              />
+            </section>
+          )}
+        </>
+      )}
+
+      {/* ── Ver otros: lista de usuarios ── */}
+      {tab === "otros" && !usuarioVisto && (
+        <div className="usuarios-lista">
+          {usuarios
+            .filter(u => u.nombre !== usuario)
+            .map(u => (
+              <button
+                key={u.nombre}
+                className="usuario-btn"
+                onClick={() => setUsuarioVisto(u)}
+              >
+                {u.nombre}
+              </button>
+            ))
+          }
+        </div>
+      )}
+
+      {/* ── Ver otros: predicciones del usuario seleccionado ── */}
+      {tab === "otros" && usuarioVisto && (
+        <>
+          <button
+            className="tab-btn"
+            onClick={() => setUsuarioVisto(null)}
+            style={{ marginTop: "1.5rem", marginBottom: "1.5rem" }}
+          >
+            ← Volver
+          </button>
+          <h2 className="knockout-main-title">{usuarioVisto.nombre}</h2>
+          <VistaUsuario usuarioVisto={usuarioVisto} />
+        </>
+      )}
+
     </div>
   )
 }

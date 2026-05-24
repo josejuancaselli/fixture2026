@@ -8,6 +8,7 @@ const Grupo = ({
     predicciones,
     setPredicciones,
     calcularTabla,
+    readOnly
 }) => {
 
     const [mostrarPartidos, setMostrarPartidos] = useState(false)
@@ -84,32 +85,28 @@ const Grupo = ({
                                         type="number"
                                         min="0"
                                         value={prediccion?.golesLocal ?? ""}
+                                        readOnly={readOnly}
                                         onChange={(e) => {
+                                            if (readOnly) return
                                             setPredicciones((prev) =>
-                                                actualizarPrediccion(
-                                                    prev,
-                                                    partido.id,
-                                                    "golesLocal",
-                                                    e.target.value
-                                                )
+                                                actualizarPrediccion(prev, partido.id, "golesLocal", e.target.value)
                                             )
                                         }}
+                                        style={readOnly ? { pointerEvents: "none", opacity: 0.6 } : {}}
                                     />
                                     <span className="partido-separador">–</span>
                                     <input
                                         type="number"
                                         min="0"
                                         value={prediccion?.golesVisitante ?? ""}
+                                        readOnly={readOnly}
                                         onChange={(e) => {
+                                            if (readOnly) return
                                             setPredicciones((prev) =>
-                                                actualizarPrediccion(
-                                                    prev,
-                                                    partido.id,
-                                                    "golesVisitante",
-                                                    e.target.value
-                                                )
+                                                actualizarPrediccion(prev, partido.id, "golesVisitante", e.target.value)
                                             )
                                         }}
+                                        style={readOnly ? { pointerEvents: "none", opacity: 0.6 } : {}}
                                     />
                                 </div>
 

@@ -13,10 +13,9 @@ function toggleGanador(setGanadores, partido, equipoId) {
 }
 
 /* ── Card ───────────────────────────────────────── */
-function MatchCard({ partido, ganadores, setGanadores, mirrored }) {
+function MatchCard({ partido, ganadores, setGanadores, mirrored, readOnly }) {
   if (!partido) return <div className="bk-card bk-card--empty" />
 
-  // Leer ganador directamente del array en cada render
   const ganActual = ganadores.find(g => g.partidoId === partido.id)
 
   const equipos = [
@@ -32,7 +31,8 @@ function MatchCard({ partido, ganadores, setGanadores, mirrored }) {
           <div
             key={key}
             className={`bk-team${activo ? " bk-team--activo" : ""}${!equipo ? " bk-team--vacio" : ""}`}
-            onClick={() => equipo && setGanadores && toggleGanador(setGanadores, partido, equipo.id)}
+            onClick={() => !readOnly && equipo && setGanadores && toggleGanador(setGanadores, partido, equipo.id)}
+            style={readOnly ? { cursor: "default" } : {}}
           >
             {equipo
               ? <img src={equipo.bandera} className="bk-bandera" alt={equipo.nombre} />
@@ -46,7 +46,7 @@ function MatchCard({ partido, ganadores, setGanadores, mirrored }) {
 }
 
 /* ── Slot ───────────────────────────────────────── */
-function Slot({ partido, ganadores, setGanadores, mirrored, flex, slotRef }) {
+function Slot({ partido, ganadores, setGanadores, mirrored, flex, slotRef, readOnly }) {
   return (
     <div ref={slotRef} className="bk-slot" style={{ flex }}>
       <div className="bk-slot-inner">
@@ -55,6 +55,7 @@ function Slot({ partido, ganadores, setGanadores, mirrored, flex, slotRef }) {
           ganadores={ganadores}
           setGanadores={setGanadores}
           mirrored={mirrored}
+          readOnly={readOnly}
         />
       </div>
     </div>
@@ -62,7 +63,7 @@ function Slot({ partido, ganadores, setGanadores, mirrored, flex, slotRef }) {
 }
 
 /* ── Columna ────────────────────────────────────── */
-function Col({ partidos, ganadores, setGanadores, mirrored, totalSlots, label, slotRefs }) {
+function Col({ partidos, ganadores, setGanadores, mirrored, totalSlots, label, slotRefs, readOnly }) {
   const slotsPerMatch = totalSlots / (partidos.length || 1)
   return (
     <div className="bk-col">
@@ -77,6 +78,7 @@ function Col({ partidos, ganadores, setGanadores, mirrored, totalSlots, label, s
             mirrored={mirrored}
             flex={slotsPerMatch}
             slotRef={slotRefs?.[i]}
+            readOnly={readOnly}
           />
         ))}
       </div>
@@ -85,7 +87,7 @@ function Col({ partidos, ganadores, setGanadores, mirrored, totalSlots, label, s
 }
 
 /* ── Final ──────────────────────────────────────── */
-function ColFinal({ partido, ganadores, setGanadores, slotRef }) {
+function ColFinal({ partido, ganadores, setGanadores, slotRef, readOnly }) {
   return (
     <div className="bk-col bk-col--final">
       <span className="bk-col-label bk-col-label--final">Final</span>
@@ -97,6 +99,7 @@ function ColFinal({ partido, ganadores, setGanadores, slotRef }) {
               ganadores={ganadores}
               setGanadores={setGanadores}
               mirrored={false}
+              readOnly={readOnly}
             />
           </div>
         </div>
@@ -105,7 +108,7 @@ function ColFinal({ partido, ganadores, setGanadores, slotRef }) {
   )
 }
 
-/* ── SVG Lines — solo geometría, sin estado ─────── */
+/* ── SVG Lines ──────────────────────────────────── */
 function Lines({ fromRefs, toRefs, containerRef, side }) {
   const [paths, setPaths] = useState([])
 
@@ -147,7 +150,6 @@ function Lines({ fromRefs, toRefs, containerRef, side }) {
       setPaths(newPaths)
     }
 
-    // Pequeño delay para que el layout esté pintado
     const id = setTimeout(compute, 50)
     window.addEventListener("resize", compute)
     return () => {
@@ -155,7 +157,7 @@ function Lines({ fromRefs, toRefs, containerRef, side }) {
       window.removeEventListener("resize", compute)
     }
   // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [])   // ← solo al montar; las líneas son pura geometría, no dependen de ganadores
+  }, [])
 
   if (!paths.length) return null
 
@@ -177,6 +179,7 @@ export default function Bracket(props) {
     ganadoresSemis = [], ganadorFinal = [],
     setGanadores16avos, setGanadoresOctavos, setGanadoresCuartos,
     setGanadoresSemis, setGanadorFinal,
+    readOnly = false,
   } = props
 
   const split = (arr) => {
@@ -209,17 +212,17 @@ export default function Bracket(props) {
   return (
     <div className="bk-root" ref={containerRef}>
 
-      <Col partidos={avos_L}  ganadores={ganadores16avos}  setGanadores={setGanadores16avos}  mirrored={false} totalSlots={SLOTS} label="16avos" slotRefs={refsAvosL} />
-      <Col partidos={oct_L}   ganadores={ganadoresOctavos} setGanadores={setGanadoresOctavos} mirrored={false} totalSlots={SLOTS} label="Oct"    slotRefs={refsOctL}  />
-      <Col partidos={cuar_L}  ganadores={ganadoresCuartos} setGanadores={setGanadoresCuartos} mirrored={false} totalSlots={SLOTS} label="Cuar"   slotRefs={refsCuarL} />
-      <Col partidos={semi_L}  ganadores={ganadoresSemis}   setGanadores={setGanadoresSemis}   mirrored={false} totalSlots={SLOTS} label="Semi"   slotRefs={refsSemiL} />
+      <Col partidos={avos_L}  ganadores={ganadores16avos}  setGanadores={setGanadores16avos}  mirrored={false} totalSlots={SLOTS} label="16avos" slotRefs={refsAvosL} readOnly={readOnly} />
+      <Col partidos={oct_L}   ganadores={ganadoresOctavos} setGanadores={setGanadoresOctavos} mirrored={false} totalSlots={SLOTS} label="Oct"    slotRefs={refsOctL}  readOnly={readOnly} />
+      <Col partidos={cuar_L}  ganadores={ganadoresCuartos} setGanadores={setGanadoresCuartos} mirrored={false} totalSlots={SLOTS} label="Cuar"   slotRefs={refsCuarL} readOnly={readOnly} />
+      <Col partidos={semi_L}  ganadores={ganadoresSemis}   setGanadores={setGanadoresSemis}   mirrored={false} totalSlots={SLOTS} label="Semi"   slotRefs={refsSemiL} readOnly={readOnly} />
 
-      <ColFinal partido={finalPartido} ganadores={ganadorFinal} setGanadores={setGanadorFinal} slotRef={refsFinal[0]} />
+      <ColFinal partido={finalPartido} ganadores={ganadorFinal} setGanadores={setGanadorFinal} slotRef={refsFinal[0]} readOnly={readOnly} />
 
-      <Col partidos={semi_R}  ganadores={ganadoresSemis}   setGanadores={setGanadoresSemis}   mirrored={true} totalSlots={SLOTS} label="Semi"   slotRefs={refsSemiR}  />
-      <Col partidos={cuar_R}  ganadores={ganadoresCuartos} setGanadores={setGanadoresCuartos} mirrored={true} totalSlots={SLOTS} label="Cuar"   slotRefs={refsCuarR}  />
-      <Col partidos={oct_R}   ganadores={ganadoresOctavos} setGanadores={setGanadoresOctavos} mirrored={true} totalSlots={SLOTS} label="Oct"    slotRefs={refsOctR}   />
-      <Col partidos={avos_R}  ganadores={ganadores16avos}  setGanadores={setGanadores16avos}  mirrored={true} totalSlots={SLOTS} label="16avos" slotRefs={refsAvosR}  />
+      <Col partidos={semi_R}  ganadores={ganadoresSemis}   setGanadores={setGanadoresSemis}   mirrored={true} totalSlots={SLOTS} label="Semi"   slotRefs={refsSemiR}  readOnly={readOnly} />
+      <Col partidos={cuar_R}  ganadores={ganadoresCuartos} setGanadores={setGanadoresCuartos} mirrored={true} totalSlots={SLOTS} label="Cuar"   slotRefs={refsCuarR}  readOnly={readOnly} />
+      <Col partidos={oct_R}   ganadores={ganadoresOctavos} setGanadores={setGanadoresOctavos} mirrored={true} totalSlots={SLOTS} label="Oct"    slotRefs={refsOctR}   readOnly={readOnly} />
+      <Col partidos={avos_R}  ganadores={ganadores16avos}  setGanadores={setGanadores16avos}  mirrored={true} totalSlots={SLOTS} label="16avos" slotRefs={refsAvosR}  readOnly={readOnly} />
 
       <Lines fromRefs={refsAvosL} toRefs={refsOctL}  containerRef={containerRef} side="left" />
       <Lines fromRefs={refsOctL}  toRefs={refsCuarL} containerRef={containerRef} side="left" />
